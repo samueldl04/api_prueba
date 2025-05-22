@@ -1,0 +1,28 @@
+# Entornos virtuales
+.venv/
+venv/
+env/
+
+# Archivos Python compilados
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.pyc
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/*.so
+**/*.cpython-*.pyc
+
+# Archivos específicos
+estructura.md
+config.json
+
+# Logs
+*.log
+
+# Node
+node_modules/

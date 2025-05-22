@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <!-- Barra lateral con botones -->
+    <div class="fixed right-0 top-0 h-screen w-48 bg-white shadow-lg border-l border-gray-200 flex flex-col items-center pt-6 space-y-4">
+        <button 
+            class="w-4/5 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-300"
+            onclick="openModal('camasModal')">
+            Camas
+        </button>
+        <button 
+            class="w-4/5 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-300"
+            onclick="openModal('empleadosModal')">
+            Empleados
+        </button>
+        <button 
+            class="w-4/5 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-300"
+            onclick="openModal('registrosModal')">
+            Registros
+        </button>
+    </div>
+
+    <!-- Modal Camas -->
+    <div id="camasModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+        <div class="relative top-20 mx-auto p-5 border w-3/4 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <h3 class="text-lg font-medium text-gray-900">Gestión de Camas</h3>
+                
+                <!-- Filtros -->
+                <div class="mt-4 grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Piso</label>
+                        <select id="pisoFilter" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            <option value="">Todos los pisos</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Cama</label>
+                        <select id="camaFilter" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            <option value="">Todas las camas</option>
+                        </select>
+                    </div>
+                </div>
+    
+                <!-- Tabla de camas -->
+                <div class="mt-6 overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Piso</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Número</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="camasTableBody" class="bg-white divide-y divide-gray-200">
+                            <!-- Los datos de las camas se insertarán aquí -->
+                        </tbody>
+                    </table>
+                </div>
+    
+                <div class="flex justify-end mt-4">
+                    <button 
+                        class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
+                        onclick="closeModal('camasModal')">
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal Empleados -->
+    <div id="empleadosModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+        <div class="relative top-20 mx-auto p-5 border w-3/4 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <h3 class="text-lg font-medium text-gray-900">Gestión de Empleados</h3>
+                
+                <!-- Filtros -->
+                <div class="mt-4 grid grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Nombre</label>
+                        <input type="text" id="nombreFilter" 
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                            placeholder="Buscar por nombre...">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">DNI</label>
+                        <input type="text" id="dniFilter" 
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                            placeholder="Buscar por DNI...">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Estado</label>
+                        <select id="estadoFilter" 
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            <option value="">Todos</option>
+                            <option value="true">Activo</option>
+                            <option value="false">Inactivo</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Tabla de empleados -->
+                <div class="mt-6 overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">DNI</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Apellido</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="empleadosTableBody" class="bg-white divide-y divide-gray-200">
+                            <!-- Los datos de los empleados se insertarán aquí -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="flex justify-end mt-4">
+                    <button 
+                        class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
+                        onclick="closeModal('empleadosModal')">
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Registros -->
+    <div id="registrosModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+        <div class="relative top-20 mx-auto p-5 border w-3/4 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <h3 class="text-lg font-medium text-gray-900">Gestión de Registros</h3>
+                
+                <!-- Filtros -->
+                <div class="mt-4 grid grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Fecha</label>
+                        <input type="date" id="fechaFilter" 
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Tipo</label>
+                        <select id="tipoFilter" 
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            <option value="">Todos los tipos</option>
+                            <option value="entrada">Entrada</option>
+                            <option value="salida">Salida</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Empleado</label>
+                        <select id="empleadoFilter" 
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            <option value="">Todos los empleados</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Tabla de registros -->
+                <div class="mt-6 overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Empleado</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="registrosTableBody" class="bg-white divide-y divide-gray-200">
+                            <!-- Los datos de los registros se insertarán aquí -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="flex justify-end mt-4">
+                    <button 
+                        class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
+                        onclick="closeModal('registrosModal')">
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let todosLosRegistros = [];
+        let todasLasCamas = [];
+        let todosLosEmpleados = [];
+
+        document.getElementById('pisoFilter').addEventListener('change', filtrarCamas);
+        document.getElementById('camaFilter').addEventListener('change', filtrarCamas);
+
+        // Actualizar opciones de camas cuando cambie el piso
+        document.getElementById('pisoFilter').addEventListener('change', function() {
+            const pisoSeleccionado = this.value;
+            const selectCama = document.getElementById('camaFilter');
+            selectCama.innerHTML = '<option value="">Todas las camas</option>';
+            
+            if (pisoSeleccionado) {
+                const camasDelPiso = todasLasCamas.filter(cama => 
+                    cama.piso.toString() === pisoSeleccionado
+                );
+                const numeros = [...new Set(camasDelPiso.map(cama => cama.numero))];
+                numeros.forEach(numero => {
+                    const option = document.createElement('option');
+                    option.value = numero;
+                    option.textContent = `Cama ${numero}`;
+                    selectCama.appendChild(option);
+                });
+            }
+        });
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.remove('hidden');
+            if (modalId === 'camasModal') {
+                cargarCamas();
+            } else if (modalId === 'empleadosModal') {
+                cargarEmpleados();
+            } else if (modalId === 'registrosModal') {
+                cargarRegistros();
+            }
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+        // Agregamos una variable para almacenar todos los datos
+        
+
+        async function cargarCamas() {
+            try {
+                const response = await fetch('/api/v1/admin/rooms');
+                const data = await response.json();
+                todasLasCamas = data; // Guardamos todos los datos
+                
+                // Cargar los filtros
+                const pisos = [...new Set(data.map(cama => cama.piso))];
+                const selectPiso = document.getElementById('pisoFilter');
+                selectPiso.innerHTML = '<option value="">Todos los pisos</option>';
+                pisos.forEach(piso => {
+                    const option = document.createElement('option');
+                    option.value = piso;
+                    option.textContent = `Piso ${piso}`;
+                    selectPiso.appendChild(option);
+                });
+
+                // Mostrar los datos en la tabla
+                actualizarTablaCamas(data);
+            } catch (error) {
+                console.error('Error al cargar las camas:', error);
+            }
+        }
+
+        function filtrarCamas() {
+            const pisoSeleccionado = document.getElementById('pisoFilter').value;
+            const camaSeleccionada = document.getElementById('camaFilter').value;
+            
+            // Filtrar los datos localmente
+            let datosFiltrados = todasLasCamas;
+            
+            if (pisoSeleccionado) {
+                datosFiltrados = datosFiltrados.filter(cama => cama.piso.toString() === pisoSeleccionado);
+            }
+            
+            if (camaSeleccionada) {
+                datosFiltrados = datosFiltrados.filter(cama => cama.numero.toString() === camaSeleccionada);
+            }
+            
+            // Actualizar la tabla con los datos filtrados
+            actualizarTablaCamas(datosFiltrados);
+        }
+        function actualizarTablaCamas(camas) {
+            const tbody = document.getElementById('camasTableBody');
+            tbody.innerHTML = '';
+            
+            camas.forEach(cama => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${cama.id}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${cama.piso}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${cama.numero}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                            ${cama.estado === 'Disponible' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                            ${cama.estado}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+                        <button 
+                            class="text-blue-600 hover:text-blue-900"
+                            onclick="editarCama(${cama.id})">
+                            Editar
+                        </button>
+                        <button 
+                            class="text-red-600 hover:text-red-900"
+                            onclick="cambiarEstado(${cama.id})">
+                            Cambiar Estado
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        async function cargarRegistros() {
+            try {
+                const response = await fetch('/api/v1/admin/record');
+                const data = await response.json();
+                todosLosRegistros = data;
+                
+                // Cargar el filtro de empleados
+                const empleados = [...new Set(data.map(registro => registro.empleado))];
+                const selectEmpleado = document.getElementById('empleadoFilter');
+                selectEmpleado.innerHTML = '<option value="">Todos los empleados</option>';
+                empleados.forEach(empleado => {
+                    const option = document.createElement('option');
+                    option.value = empleado.id;
+                    option.textContent = `${empleado.first_name} ${empleado.last_name}`;
+                    selectEmpleado.appendChild(option);
+                });
+        
+                actualizarTablaRegistros(data);
+            } catch (error) {
+                console.error('Error al cargar registros:', error);
+            }
+        }
+        
+        // Función para filtrar registros
+        function filtrarRegistros() {
+            const fechaFiltro = document.getElementById('fechaFilter').value;
+            const tipoFiltro = document.getElementById('tipoFilter').value;
+            const empleadoFiltro = document.getElementById('empleadoFilter').value;
+            
+            let registrosFiltrados = todosLosRegistros;
+            
+            if (fechaFiltro) {
+                registrosFiltrados = registrosFiltrados.filter(registro => 
+                    registro.fecha.includes(fechaFiltro)
+                );
+            }
+            
+            if (tipoFiltro) {
+                registrosFiltrados = registrosFiltrados.filter(registro => 
+                    registro.tipo === tipoFiltro
+                );
+            }
+            
+            if (empleadoFiltro) {
+                registrosFiltrados = registrosFiltrados.filter(registro => 
+                    registro.empleado.id.toString() === empleadoFiltro
+                );
+            }
+            
+            actualizarTablaRegistros(registrosFiltrados);
+        }
+        
+        // Función para actualizar la tabla de registros
+        function actualizarTablaRegistros(registros) {
+            const tbody = document.getElementById('registrosTableBody');
+            tbody.innerHTML = '';
+            
+            registros.forEach(registro => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${registro.id}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${registro.fecha}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                            ${registro.tipo === 'entrada' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                            ${registro.tipo}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        ${registro.empleado.first_name} ${registro.empleado.last_name}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+                        <button 
+                            class="text-blue-600 hover:text-blue-900"
+                            onclick="verDetalleRegistro(${registro.id})">
+                            Ver Detalle
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        // Variables globales
+        
+
+        // Función para cargar empleados
+        async function cargarEmpleados() {
+            try {
+                const response = await fetch('/api/v1/admin/employee');
+                const data = await response.json();
+                todosLosEmpleados = data;
+                actualizarTablaEmpleados(data);
+            } catch (error) {
+                console.error('Error al cargar empleados:', error);
+            }
+        }
+
+        // Función para filtrar empleados
+        function filtrarEmpleados() {
+            const nombreFiltro = document.getElementById('nombreFilter').value.toLowerCase();
+            const dniFiltro = document.getElementById('dniFilter').value.toLowerCase();
+            const estadoFiltro = document.getElementById('estadoFilter').value;
+            
+            let empleadosFiltrados = todosLosEmpleados;
+            
+            if (nombreFiltro) {
+                empleadosFiltrados = empleadosFiltrados.filter(emp => 
+                    emp.first_name.toLowerCase().includes(nombreFiltro) || 
+                    emp.last_name.toLowerCase().includes(nombreFiltro)
+                );
+            }
+            
+            if (dniFiltro) {
+                empleadosFiltrados = empleadosFiltrados.filter(emp => 
+                    emp.dni.toLowerCase().includes(dniFiltro)
+                );
+            }
+            
+            if (estadoFiltro !== "") {
+                empleadosFiltrados = empleadosFiltrados.filter(emp => 
+                    emp.status.toString() === estadoFiltro
+                );
+            }
+            
+            actualizarTablaEmpleados(empleadosFiltrados);
+        }
+
+        // Función para actualizar la tabla de empleados
+        function actualizarTablaEmpleados(empleados) {
+            const tbody = document.getElementById('empleadosTableBody');
+            tbody.innerHTML = '';
+            
+            empleados.forEach(empleado => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${empleado.dni}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${empleado.first_name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${empleado.last_name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${empleado.email}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                            ${empleado.status ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                            ${empleado.status ? 'Activo' : 'Inactivo'}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+                        <button 
+                            class="text-blue-600 hover:text-blue-900"
+                            onclick="editarEmpleado(${empleado.id})">
+                            Editar
+                        </button>
+                        <button 
+                            class="text-red-600 hover:text-red-900"
+                            onclick="cambiarEstadoEmpleado(${empleado.id})">
+                            Cambiar Estado
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        
+        // Event listeners para los filtros
+        document.getElementById('fechaFilter').addEventListener('change', filtrarRegistros);
+        document.getElementById('tipoFilter').addEventListener('change', filtrarRegistros);
+        document.getElementById('empleadoFilter').addEventListener('change', filtrarRegistros);
+        document.getElementById('nombreFilter').addEventListener('input', filtrarEmpleados);
+        document.getElementById('dniFilter').addEventListener('input', filtrarEmpleados);
+        document.getElementById('estadoFilter').addEventListener('change', filtrarEmpleados);
+        
+    </script>
+</body>
+</html>

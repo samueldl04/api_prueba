@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalles de Llamada</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="max-w-2xl mx-auto mt-8 p-6 bg-white rounded-lg shadow-md">
+        <div class="text-center mb-8">
+            <h2 class="text-2xl font-semibold text-gray-800">Llamada de Asistencia</h2>
+        </div>
+        
+        <div class="bg-gray-50 p-6 rounded-lg mb-6">
+            <p class="mb-3">
+                <span class="font-bold text-gray-700">Habitación:</span>
+                <span id="room" class="ml-2 text-gray-600">{{ room }}</span>
+            </p>
+            <p class="mb-3">
+                <span class="font-bold text-gray-700">Cama:</span>
+                <span id="bed" class="ml-2 text-gray-600">{{ bed }}</span>
+            </p>
+            <p class="mb-3">
+                <span class="font-bold text-gray-700">Piso:</span>
+                <span id="floor" class="ml-2 text-gray-600">{{ flor or floor }}</span>
+            </p>
+        </div>
+
+        <button 
+            onclick="aceptarLlamada()" 
+            class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-300">
+            Aceptar Llamada
+        </button>
+
+        <div id="error-container" 
+            class="hidden mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+            <!-- Aquí se mostrarán los mensajes de error -->
+        </div>
+    </div>
+
+    <script>
+        // Opción 1: usar Jinja (si FastAPI pasa estos valores)
+        // const callData = {
+        //     room: {{ room }},
+        //     bed: {{ bed }},
+        //     flor: {{ flor }},
+        //     id_room: {{ id_room }}
+        // };
+
+        // Opción 2: extraer parámetros desde la URL (recomendado si no pasas con Jinja)
+        const params = new URLSearchParams(window.location.search);
+        const callData = {
+            room: params.get('room'),
+            bed: params.get('bed'),
+            flor: params.get('flor'),
+            id_room: params.get('id_room')
+        };
+        // Mostrar datos en la página
+        document.getElementById('room').textContent = callData.room;
+        document.getElementById('bed').textContent = callData.bed;
+        document.getElementById('floor').textContent = callData.flor;
+
+        async function aceptarLlamada() {
+            try {
+                const response = await fetch('/api/v1/home/accept_call', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(callData)
+                });
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.detail || 'Error en la petición');
+                }
+                // Redirigir o mostrar confirmación
+                window.location.href = '/home';
+            } catch (error) {
+                mostrarError(error.message);
+            }
+        }
+
+        function mostrarError(mensaje) {
+            const container = document.getElementById('error-container');
+            container.textContent = mensaje;
+            container.classList.remove('hidden');
+            setTimeout(() => container.classList.add('hidden'), 5000);
+        }
+    </script>
+</body>
+</html>

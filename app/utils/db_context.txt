@@ -1,0 +1,580 @@
+C:\Users\porta\Documents\apps\arenna_fichajes\app\models\app_config.py:
+from datetime import datetime
+from typing import Optional
+from sqlalchemy import Column, Integer, String, ForeignKey, JSON, Boolean, DateTime
+from sqlalchemy.orm import relationship, Mapped, mapped_column
+from app.db.base import Base
+
+class AppConfig(Base):
+    __tablename__ = "app_config"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    company_id: Mapped[int] = mapped_column(Integer, ForeignKey("company.id"), nullable=False)
+    config_section: Mapped[str] = mapped_column(String(50), nullable=True, default="general")
+    config_key: Mapped[str] = mapped_column(String(50), nullable=False)
+    config_value: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    description: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    is_system: Mapped[bool] = mapped_column(Boolean, nullable=True, default=False)
+    created_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True) 
+
+    # Relación con Company
+    company = relationship("Company", back_populates="app_configs")
+
+C:\Users\porta\Documents\apps\arenna_fichajes\app\models\clock_in.py:
+from datetime import date, datetime, time
+from typing import TYPE_CHECKING
+from sqlalchemy import Date, Integer, Boolean, ForeignKey, String, Time
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from app.db.base import Base
+from app.models.user import User
+
+if TYPE_CHECKING:
+    from app.models.user_company_role_rel import UserCompanyRole  # Actualizado
+    from app.models.clock_in_type import ClockInType
+    from app.models.company import Company
+
+def current_date():
+    return datetime.utcnow().date()
+
+def current_time():
+    return datetime.utcnow().time()
+
+class ClockIn(Base):
+    __tablename__ = "clock_in"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    company_id: Mapped[int] = mapped_column(Integer, ForeignKey("company.id"), nullable=False)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("user.id"), nullable=False)
+    clock_in_type_id: Mapped[int] = mapped_column(Integer, ForeignKey("clock_in_type.id"), nullable=False)
+    details: Mapped[str] = mapped_column(String(100), nullable=True)
+    reg_date: Mapped[date] = mapped_column(Date, nullable=False, default=current_date)
+    reg_time: Mapped[time] = mapped_column(Time, nullable=False, default=current_time)
+    log_date: Mapped[date] = mapped_column(Date, nullable=False, default=current_date)
+    log_time: Mapped[time] = mapped_column(Time, nullable=False, default=current_time)
+    auto: Mapped[bool] = mapped_column(Boolean, default=False)
+    modified: Mapped[bool] = mapped_column(Boolean, default=False)
+    modification_details: Mapped[str] = mapped_column(String(200), nullable=False)
+    gps: Mapped[str] = mapped_column(String(45), nullable=False)
+
+    # Relaciones
+    user: Mapped["User"] = relationship("User")
+    clock_in_type: Mapped["ClockInType"] = relationship("ClockInType", back_populates="clock_ins")
+    company: Mapped["Company"] = relationship("Company", back_populates="clock_ins")
+
+C:\Users\porta\Documents\apps\arenna_fichajes\app\models\clock_in_type.py:
+from typing import List, TYPE_CHECKING, Optional
+from sqlalchemy import Integer, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from app.db.base import Base
+
+if TYPE_CHECKING:
+    from app.models.clock_in import ClockIn
+
+class ClockInType(Base):
+    __tablename__ = "clock_in_type"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(15), nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)  # Campo adicional opcional
+
+    # Relación con ClockIn
+    clock_ins: Mapped[List["ClockIn"]] = relationship("ClockIn", back_populates="clock_in_type")
+
+C:\Users\porta\Documents\apps\arenna_fichajes\app\models\company.py:
+from datetime import date
+from typing import List, TYPE_CHECKING, Optional
+from sqlalchemy import Date, Integer, String, Boolean, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from app.db.base import Base
+from app.models.app_config import AppConfig
+
+if TYPE_CHECKING:
+    from app.models.user_company_role_rel import UserCompanyRole
+    from app.models.clock_in import ClockIn
+    from app.models.license_company_rel import LicenseCompanyRel
+    from app.models.license import License
+
+class Company(Base):
+    __tablename__ = "company"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    reference_name: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    cif: Mapped[str] = mapped_column(String(9), nullable=False, unique=True)
+    address: Mapped[str] = mapped_column(String(200), nullable=False)
+    phone: Mapped[int] = mapped_column(String(20), nullable=False)
+    email: Mapped[str] = mapped_column(String(45), nullable=False)
+    active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    license_id: Mapped[int] = mapped_column(Integer, ForeignKey("license.id"), nullable=False)
+    logo: Mapped[str] = mapped_column(String(200), nullable=True)
+    website: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    industry: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    foundation_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    tax_id: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    company_size: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    timezone: Mapped[str] = mapped_column(String(50), nullable=True, default="Europe/Madrid")
+
+    # Relación con la asociación usuario-compañía-rol
+    user_roles = relationship("UserCompanyRole", back_populates="company")
+    clock_ins: Mapped[List["ClockIn"]] = relationship("ClockIn", back_populates="company")
+    roles = relationship("Role", back_populates="company", foreign_keys="[Role.company_id]")
+    license_rel: Mapped["License"] = relationship("License", back_populates="companies")
+    license_associations: Mapped[List["LicenseCompanyRel"]] = relationship("LicenseCompanyRel", back_populates="company")
+    departments = relationship("Department", back_populates="company")
+    locations = relationship("Location", back_populates="company")
+    schedules = relationship("Schedule", back_populates="company")
+    notifications = relationship("Notification", back_populates="company")
+    integrations = relationship("Integration", back_populates="company")
+    app_configs: Mapped[List["AppConfig"]] = relationship("AppConfig", back_populates="company")
+
+C:\Users\porta\Documents\apps\arenna_fichajes\app\models\department.py:
+from typing import List, Optional
+from sqlalchemy import Integer, String, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from app.db.base import Base
+
+class Department(Base):
+    __tablename__ = "department"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(50), nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    company_id: Mapped[int] = mapped_column(Integer, ForeignKey("company.id"), nullable=False)
+    category: Mapped[str] = mapped_column(String(30), nullable=True)
+    department_head_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("user.id"), nullable=True)
+    color_code: Mapped[str] = mapped_column(String(7), nullable=True, default="#3b82f6")  # Color para la UI
+    icon: Mapped[str] = mapped_column(String(50), nullable=True)
+
+    # Relaciones
+    company = relationship("Company", back_populates="departments")
+    department_head = relationship("User", foreign_keys=[department_head_id])
+    employees = relationship("UserDepartmentRel", back_populates="department")
+
+C:\Users\porta\Documents\apps\arenna_fichajes\app\models\integration.py:
+import enum
+from datetime import datetime
+from typing import Optional
+from sqlalchemy import Integer, String, ForeignKey, Boolean, DateTime, JSON
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from app.db.base import Base
+
+# En algún futuro no muy lejano...                                                              o si.
+
+class IntegrationType(enum.Enum):
+    GOOGLE_WORKSPACE = "google_workspace"
+    MICROSOFT_365 = "microsoft_365"
+    SLACK = "slack"
+    ZAPIER = "zapier"
+    CUSTOM = "custom"
+
+class Integration(Base):
+    __tablename__ = "integration"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    type: Mapped[str] = mapped_column(String(50), nullable=False)
+    company_id: Mapped[int] = mapped_column(Integer, ForeignKey("company.id"), nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    config: Mapped[dict] = mapped_column(JSON, nullable=True)
+    access_token: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    refresh_token: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    token_expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relaciones
+    company = relationship("Company", back_populates="integrations")
+
+C:\Users\porta\Documents\apps\arenna_fichajes\app\models\license.py:
+from typing import Optional, List
+from datetime import date
+from sqlalchemy import Integer, String, Date
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from app.db.base import Base
+from app.models.license_company_rel import LicenseCompanyRel
+
+class License(Base):
+    __tablename__ = "license"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(50), nullable=False)
+    charge: Mapped[int] = mapped_column(Integer, nullable=False)
+    expiration_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    license_type: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+
+    license_companies: Mapped[List["LicenseCompanyRel"]] = relationship("LicenseCompanyRel", back_populates="license")
+    companies = relationship("Company", back_populates="license_rel")
+
+C:\Users\porta\Documents\apps\arenna_fichajes\app\models\license_company_rel.py:
+from sqlalchemy import Integer, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from app.db.base import Base
+
+class LicenseCompanyRel(Base):
+    __tablename__ = "license_company_rel"
+
+    license_id: Mapped[int] = mapped_column(Integer, ForeignKey("license.id"), primary_key=True)
+    company_id: Mapped[int] = mapped_column(Integer, ForeignKey("company.id"), primary_key=True)
+
+    license = relationship("License", back_populates="license_companies")
+    company = relationship("Company", back_populates="license_associations")
+
+
+C:\Users\porta\Documents\apps\arenna_fichajes\app\models\location.py:
+from typing import List, Optional
+from sqlalchemy import Integer, String, Float, ForeignKey, Boolean
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from app.db.base import Base
+
+class Location(Base):
+    __tablename__ = "location"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    address: Mapped[str] = mapped_column(String(200), nullable=False)
+    city: Mapped[str] = mapped_column(String(50), nullable=False)
+    postal_code: Mapped[str] = mapped_column(String(10), nullable=True)
+    country: Mapped[str] = mapped_column(String(50), nullable=False, default="España")
+    latitude: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    longitude: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    location_type: Mapped[str] = mapped_column(String(30), nullable=False, default="office")  # office, warehouse, branch
+    company_id: Mapped[int] = mapped_column(Integer, ForeignKey("company.id"), nullable=False)
+    is_main: Mapped[bool] = mapped_column(Boolean, default=False)
+    
+    # Relaciones
+    company = relationship("Company", back_populates="locations")
+    assigned_employees = relationship("UserLocationRel", back_populates="location")
+
+C:\Users\porta\Documents\apps\arenna_fichajes\app\models\migration_mapping.py:
+from typing import Optional
+from sqlalchemy import Integer, String
+from sqlalchemy.orm import Mapped, mapped_column
+from app.db.base import Base
+
+class MigrationMapping(Base):
+    __tablename__ = "migration_mapping"
+    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    old_type: Mapped[str] = mapped_column(String(20), nullable=False)  # "role" o "allowance"
+    old_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    new_type: Mapped[str] = mapped_column(String(20), nullable=False)  # "role" o "permission"
+    new_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    company_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+
+C:\Users\porta\Documents\apps\arenna_fichajes\app\models\notification.py:
+import enum
+from datetime import datetime
+from typing import Optional
+from sqlalchemy import Integer, String, ForeignKey, Boolean, DateTime, Text, Enum as SAEnum
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from app.db.base import Base
+
+class NotificationType(enum.Enum):
+    SYSTEM = "system"
+    CLOCK_IN = "clock_in"
+    SCHEDULE = "schedule"
+    EMPLOYEE = "employee"
+    DEPARTMENT = "department"
+    GENERAL = "general"
+
+class Notification(Base):
+    __tablename__ = "notification"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    type: Mapped[NotificationType] = mapped_column(SAEnum(NotificationType), nullable=False)
+    title: Mapped[str] = mapped_column(String(100), nullable=False)
+    message: Mapped[str] = mapped_column(Text, nullable=False)
+    company_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("company.id"), nullable=True)
+    user_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("user.id"), nullable=True)
+    is_read: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_system_wide: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    read_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    
+    # Relaciones
+    company = relationship("Company", back_populates="notifications")
+    user = relationship("User", back_populates="notifications")
+
+C:\Users\porta\Documents\apps\arenna_fichajes\app\models\rbac.py:
+from datetime import datetime
+from typing import List, Optional
+from sqlalchemy import Integer, String, Text, ForeignKey, DateTime, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from app.db.base import Base
+
+class Role(Base):
+    __tablename__ = "roles"
+    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(50), nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    parent_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("roles.id"), nullable=True)
+    company_id: Mapped[int] = mapped_column(Integer, ForeignKey("company.id"), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=func.now(), onupdate=func.now())
+    
+    # Relaciones
+    parent = relationship("Role", remote_side=[id], backref="children")
+    company = relationship("Company", back_populates="roles")
+    permissions = relationship("Permission", secondary="role_permission_rel", back_populates="roles")
+    user_roles = relationship("UserCompanyRole", back_populates="role")
+
+
+class Permission(Base):
+    __tablename__ = "permissions"
+    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    code: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    resource: Mapped[str] = mapped_column(String(50), nullable=False)
+    action: Mapped[str] = mapped_column(String(50), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=func.now())
+    
+    # Relaciones
+    roles = relationship("Role", secondary="role_permission_rel", back_populates="permissions")
+
+class RolePermissionRel(Base):
+    __tablename__ = "role_permission_rel"
+    
+    role_id: Mapped[int] = mapped_column(Integer, ForeignKey("roles.id"), primary_key=True)
+    permission_id: Mapped[int] = mapped_column(Integer, ForeignKey("permissions.id"), primary_key=True)
+
+C:\Users\porta\Documents\apps\arenna_fichajes\app\models\schedule.py:
+import enum
+from datetime import time
+from typing import Optional
+from sqlalchemy import Integer, String, Time, Enum as SAEnum, ForeignKey, Boolean
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from app.db.base import Base
+
+class WeekDay(enum.Enum):
+    MONDAY = 1
+    TUESDAY = 2
+    WEDNESDAY = 3
+    THURSDAY = 4
+    FRIDAY = 5
+    SATURDAY = 6
+    SUNDAY = 7
+
+class Schedule(Base):
+    __tablename__ = "schedule"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(50), nullable=False)
+    company_id: Mapped[int] = mapped_column(Integer, ForeignKey("company.id"), nullable=False)
+    is_default: Mapped[bool] = mapped_column(Boolean, default=False)
+    description: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    
+    # Relaciones
+    company = relationship("Company", back_populates="schedules")
+    schedule_details = relationship("ScheduleDetail", back_populates="schedule", cascade="all, delete-orphan")
+    assigned_users = relationship("UserCompanyRole", back_populates="schedule")
+
+class ScheduleDetail(Base):
+    __tablename__ = "schedule_detail"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    schedule_id: Mapped[int] = mapped_column(Integer, ForeignKey("schedule.id"), nullable=False)
+    weekday: Mapped[WeekDay] = mapped_column(SAEnum(WeekDay), nullable=False)
+    start_time: Mapped[time] = mapped_column(Time, nullable=False)
+    end_time: Mapped[time] = mapped_column(Time, nullable=False)
+    break_start: Mapped[Optional[time]] = mapped_column(Time, nullable=True)
+    break_end: Mapped[Optional[time]] = mapped_column(Time, nullable=True)
+    is_workday: Mapped[bool] = mapped_column(Boolean, default=True)
+    
+    # Relaciones
+    schedule = relationship("Schedule", back_populates="schedule_details")
+
+C:\Users\porta\Documents\apps\arenna_fichajes\app\models\user.py:
+from datetime import date, datetime
+import hashlib
+from typing import Optional
+from sqlalchemy import Date, Index, String, Integer, Time, Boolean, DateTime, Enum as SAEnum, event
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.ext.associationproxy import association_proxy
+from sqlalchemy_utils import EncryptedType
+from app.core.config import settings
+from app.db.base import Base
+from app.core.fernet_wrapper import FernetWrapper
+from passlib.context import CryptContext
+
+ENCRYPTION_KEY = settings.SECRET_KEY
+
+class User(Base):
+    __tablename__ = "user"
+    __table_args__ = (
+         Index('ix_user_dni_hash', 'dni_hash', unique=True),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    dni: Mapped[str] = mapped_column(
+        EncryptedType(String(512), ENCRYPTION_KEY, lambda: FernetWrapper(ENCRYPTION_KEY)),
+        nullable=False
+    )
+    dni_hash: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
+    email: Mapped[str] = mapped_column(
+        EncryptedType(String(512), ENCRYPTION_KEY, lambda: FernetWrapper(ENCRYPTION_KEY)),
+        nullable=True
+    )
+    phone_number: Mapped[str] = mapped_column(
+        EncryptedType(String(512), ENCRYPTION_KEY, lambda: FernetWrapper(ENCRYPTION_KEY)),
+        nullable=False
+    )
+    first_name: Mapped[str] = mapped_column(
+        EncryptedType(String(512), ENCRYPTION_KEY, lambda: FernetWrapper(ENCRYPTION_KEY)),
+        nullable=False
+    )
+    last_name: Mapped[str] = mapped_column(
+        EncryptedType(String(512), ENCRYPTION_KEY, lambda: FernetWrapper(ENCRYPTION_KEY)),
+        nullable=False
+    )
+    password: Mapped[str] = mapped_column(String(128), nullable=False)
+    modify_password: Mapped[bool] = mapped_column(Boolean, default=False)
+    profile_img: Mapped[str] = mapped_column(String(200), nullable=True, default="/static/img/profiles/default.png")
+    job_title: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    date_of_birth: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    employee_id: Mapped[Optional[str]] = mapped_column(String(20), nullable=True, unique=True)
+    hire_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    emergency_contact: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    emergency_phone: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
+    last_login: Mapped[Optional[DateTime]] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[DateTime] = mapped_column(DateTime, nullable=False, default=datetime.now)
+    updated_at: Mapped[DateTime] = mapped_column(DateTime, nullable=False, default=datetime.now, onupdate=datetime.now)
+
+    # Relaciones
+    user_company_roles = relationship(
+        "UserCompanyRole",
+        back_populates="user",
+        foreign_keys="[UserCompanyRole.user_id]"
+    )
+    companies = association_proxy("user_company_roles", "company")
+    departments = relationship("UserDepartmentRel", back_populates="user")
+    locations = relationship("UserLocationRel", back_populates="user")
+    notifications = relationship("Notification", back_populates="user")
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def get_hash(data: str) -> str:
+    return pwd_context.hash(data)
+
+def get_credetial_deterministic_hash(value: str) -> str:
+    return hashlib.sha256(value.encode('utf-8')).hexdigest()
+
+@event.listens_for(User.dni, 'set', retval=True)
+def lowercase_dni(target, value, oldvalue, initiator):
+    return value.lower() if isinstance(value, str) else value
+
+@event.listens_for(User, 'before_insert')
+def set_dni_hash(mapper, connection, target):
+    target.dni_hash = get_credetial_deterministic_hash(target.dni)
+
+@event.listens_for(User, 'before_update')
+def update_dni_hash(mapper, connection, target):
+    target.dni_hash = get_credetial_deterministic_hash(target.dni)
+
+@event.listens_for(User, 'before_insert')
+def set_password_hash(mapper, connection, target):
+    def is_already_hashed(password: str) -> bool:
+        return password.startswith('$2b$') or password.startswith('$2a$')
+    if not is_already_hashed(target.password):
+        target.password = get_hash(target.password)
+
+
+
+C:\Users\porta\Documents\apps\arenna_fichajes\app\models\user_company_role_rel.py:
+from datetime import date
+from typing import List, Optional
+import enum
+from sqlalchemy import Date, Integer, Boolean, ForeignKey, String, Time, Enum as SAEnum
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from app.db.base import Base
+
+from datetime import date, datetime
+from typing import List, Optional
+import enum
+from sqlalchemy import Date, Integer, Boolean, ForeignKey, String, Time, Enum as SAEnum, DateTime, func, UniqueConstraint
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from app.db.base import Base
+
+class ClockInStatus(enum.Enum):
+    ACTIVE = "active"
+    IDLE = "idle"
+    PAUSE = "pause"
+
+class UserCompanyRole(Base):
+    __tablename__ = "user_company_role"
+    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("user.id"), nullable=False)
+    company_id: Mapped[int] = mapped_column(Integer, ForeignKey("company.id"), nullable=False)
+    role_id: Mapped[int] = mapped_column(Integer, ForeignKey("roles.id"), nullable=False)
+    
+    # Campos de RBAC
+    assigned_at: Mapped[datetime] = mapped_column(DateTime, default=func.now())
+    valid_from: Mapped[datetime] = mapped_column(DateTime, default=func.now())
+    valid_until: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    assigned_by: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("user.id"), nullable=True)
+    
+    # Campos específicos de la asignación
+    schedule_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("schedule.id"), nullable=True)
+    location_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("location.id"), nullable=True)
+    position: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    supervisor_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("user.id"), nullable=True)
+    start_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    end_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    
+    # Campos de horario y estado
+    work_time: Mapped[Time] = mapped_column(Time, nullable=False)
+    break_time: Mapped[Time] = mapped_column(Time, nullable=False)
+    clock_in_status: Mapped[ClockInStatus] = mapped_column(SAEnum(ClockInStatus), nullable=False, default=ClockInStatus.IDLE)
+    
+    # Restricción única para evitar duplicados
+    __table_args__ = (UniqueConstraint('user_id', 'company_id', 'role_id', name='uq_user_company_role'),)
+    
+    # Relaciones
+    user = relationship("User", foreign_keys=[user_id], back_populates="user_company_roles")
+    company = relationship("Company", back_populates="user_roles")
+    role = relationship("Role", back_populates="user_roles")
+    schedule = relationship("Schedule", back_populates="assigned_users")
+    assigned_location = relationship("Location", foreign_keys=[location_id])
+    supervisor = relationship("User", foreign_keys=[supervisor_id])
+    assigner = relationship("User", foreign_keys=[assigned_by])
+
+C:\Users\porta\Documents\apps\arenna_fichajes\app\models\user_department_rel.py:
+from sqlalchemy import Integer, ForeignKey, DateTime
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from datetime import datetime
+from app.db.base import Base
+
+class UserDepartmentRel(Base):
+    __tablename__ = "user_department_rel"
+
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("user.id"), primary_key=True)
+    department_id: Mapped[int] = mapped_column(Integer, ForeignKey("department.id"), primary_key=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    
+    # Relaciones
+    user = relationship("User", back_populates="departments")
+    department = relationship("Department", back_populates="employees")
+
+C:\Users\porta\Documents\apps\arenna_fichajes\app\models\user_location_rel.py:
+from sqlalchemy import Integer, ForeignKey, DateTime, Boolean
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from datetime import datetime
+from app.db.base import Base
+
+class UserLocationRel(Base):
+    __tablename__ = "user_location_rel"
+
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("user.id"), primary_key=True)
+    location_id: Mapped[int] = mapped_column(Integer, ForeignKey("location.id"), primary_key=True)
+    is_primary: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    
+    # Relaciones
+    user = relationship("User", back_populates="locations")
+    location = relationship("Location", back_populates="assigned_employees")
+
