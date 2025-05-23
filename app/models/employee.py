@@ -17,7 +17,7 @@ class Employee(Base):
     __tablename__ = "employee"
     
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     dni: Mapped[str] = mapped_column(String(9), nullable=False)
     
     email: Mapped[str] =mapped_column(String(128), nullable=False)
@@ -26,8 +26,10 @@ class Employee(Base):
     last_name: Mapped[str] = mapped_column(String(128), nullable=False)
     password: Mapped[str] = mapped_column(String(128), nullable=False)
     status: Mapped[bool] = mapped_column(Boolean, default=False)
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
     company_id: Mapped[int] = mapped_column(Integer, ForeignKey("company.id"), nullable=False)
     role_id: Mapped[int] = mapped_column(Integer, ForeignKey("role_employee.id"), nullable=False)
+
 
     type_role: Mapped["RoleEmployee"] = relationship("RoleEmployee", back_populates="role")
     records: Mapped["Record"] = relationship("Record", back_populates="employer")

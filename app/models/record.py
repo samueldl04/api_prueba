@@ -27,7 +27,7 @@ class Record(Base):
     room_id: Mapped[int] = mapped_column(ForeignKey("rooms.id"), nullable=False)
     record_type_id: Mapped[int] = mapped_column(Integer, ForeignKey("record_type.id"), nullable=False)
     details: Mapped[str] = mapped_column(String(100), nullable=True)
-
+    
     date_record: Mapped[date] = mapped_column(Date, nullable=False, default=current_date)
     time_record: Mapped[time] = mapped_column(Time, nullable=False, default=current_time)
 

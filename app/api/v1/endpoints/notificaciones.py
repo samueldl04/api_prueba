@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, logger, status
 from requests import Session
@@ -5,7 +6,8 @@ from app import db
 from app.api.deps import get_current_user
 from app.db.session import get_db
 from app.models.record import Record
-from app.services.notificaiones_service import send_pushover_notification
+from app.models.rooms import Rooms
+from app.services.notificaiones_service import send_pushover_notification, trigger_relay_sync
 
 from app.schemas.notificacion import Data_room
 
@@ -21,7 +23,7 @@ async def notify(
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    # try:
+    try:
         # Construye el mensaje
         message = (
             f"¡Se ha pulsado el botón!\n"
@@ -61,6 +63,16 @@ async def notify(
             db.add(new_record)
             db.commit()
             db.refresh(new_record)
+            record = db.query(    
+                Rooms.ip_room,
+                ).filter(
+                    Rooms.id == data_room.id_room
+                ).first()
+            
+            if record and record.ip_room:
+                url = f"http://{record.ip_room}/relay/0?turn=on"
+                asyncio.create_task(trigger_relay_sync(url))
+
         except Exception as e:
             db.rollback()
             logger.error(f"Error interno al registrar la asignacion de la llamada: {str(e)}")
@@ -68,8 +80,10 @@ async def notify(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Error interno al registrar la asignacion de la llamada."
             )
+        
+        
         return new_record
-        return {"status": "Envío en curso"}
-    # except Exception as e:
-    #     raise HTTPException(status_code=500, detail=str(e))
+       
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
     

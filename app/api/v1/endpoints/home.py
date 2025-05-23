@@ -1,3 +1,4 @@
+import asyncio
 from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, Request, Response, logger, status, Query
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
 from sqlalchemy import desc
@@ -25,6 +26,7 @@ from app.schemas.auth import (
 )
 from app.api.deps import get_current_user, templates
 from app.services.home_service import create_record
+from app.services.notificaiones_service import trigger_relay_sync
 
 
 router = APIRouter()
@@ -106,6 +108,7 @@ async def presencia(
     record = db.query(
         Record.record_type_id,
         Record.user_id,
+        Rooms.ip_room,
         RecordType.name.label('status_name'),
         Employee.first_name,
         Employee.last_name,
@@ -118,6 +121,10 @@ async def presencia(
         Employee,
         Record.user_id == Employee.id,
         isouter=True
+    ).join(
+        Rooms,
+        Record.room_id == Rooms.id,
+        isouter=True
     ).filter(
         Record.company_id == current_user.company_id
     ).filter(
@@ -126,6 +133,9 @@ async def presencia(
         desc(Record.date_record),
         desc(Record.time_record)
     ).first()
+    if record and record.ip_room:
+        url = f"http://{record.ip_room}/relay/0?turn=off"
+        asyncio.create_task(trigger_relay_sync(url))
 
     type_record = 4
     if record.record_type_id == 3:

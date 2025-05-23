@@ -1,4 +1,6 @@
 import os
+from fastapi import HTTPException
+import httpx
 import requests
 from dotenv import load_dotenv
 
@@ -14,26 +16,34 @@ API_URL = "https://api.pushover.net/1/messages.json"
 def send_pushover_notification(
     message: str,
     title: str = "Notificación FastAPI",
-    priority: int = 0,
+    sound: str = "echo",     # ← Pushover Echo (long)
+    priority: int = 2,       # ← emergencia
+    retry: int = 30,         # reintentos cada 30 s
+    expire: int = 180,       # durante 180 s (3 min)
     url: str | None = None,
     url_title: str | None = None
 ) -> None:
     payload = {
-        "token": API_TOKEN,
-        "user": USER_KEY,
-        "message": message,
-        "title": title,
+        "token":    API_TOKEN,
+        "user":     USER_KEY,
+        "message":  message,
+        "title":    title,
+        "sound":    sound,
         "priority": priority,
     }
-    
-    # Add optional URL parameters if provided
+    if priority == 2:
+        payload["retry"]  = retry
+        payload["expire"] = expire
+
     if url:
-        payload["url"] = url
+        payload["url"]       = url
     if url_title:
         payload["url_title"] = url_title
 
-    print(f"USER_KEY {USER_KEY}")
-    print(f"API_URL {API_URL}")
-    
     resp = requests.post(API_URL, data=payload)
     resp.raise_for_status()
+    print("¡Notificación enviada!")
+
+async def trigger_relay_sync(url):
+    async with httpx.AsyncClient(timeout=5.0) as client:
+        await client.get(url)
