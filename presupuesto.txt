@@ -1,0 +1,32 @@
+Sistema de llamadas paciente–enfermero basado en Wi-Fi para un edificio de 5 plantas, 10 habitaciones por planta y 2 camas por habitación. Incluye:
+
+100 pulsadores Wi-Fi (llamada + presencia)
+
+100 relés Wi-Fi con piloto luminoso
+
+12 terminales Android (10 operativos + 2 reserva) con Pushover
+
+Desarrollo de servidor (API REST, portal web, base de datos)
+
+Integración Pushover, pruebas, instalación y formación
+
+Concepto	Cantidad / Horas	Precio unitario	Subtotal (€)
+A. Hardware			
+– Pulsador Wi-Fi (2 entradas)	100 uds.	70,00 €	7 000,00
+– Relé Wi-Fi (1 salida)	100 uds.	60,00 €	6 000,00
+– Smartphones Android (reserva incluida)	12 uds.	200,00 €	2 400,00
+
+Subtotal Hardware			15 400,00
+
+B. Servicios e Ingeniería			
+– Análisis y diseño	20 h	60,00 €/h	1 200,00
+– Desarrollo backend (Flask, DB, API REST)	80 h	60,00 €/h	4 800,00
+– Desarrollo frontend (portal gestión y exportación)	60 h	60,00 €/h	3 600,00
+– Integración Pushover y pruebas funcionales	20 h	60,00 €/h	1 200,00
+– QA, documentación y manual de usuario	30 h	60,00 €/h	1 800,00
+– Instalación en planta y cableado ligero	30 h	50,00 €/h	1 500,00
+– Formación a usuarios y administradores	15 h	60,00 €/h	900,00
+
+Subtotal Servicios			15 000,00
+
+TOTAL (sin impuestos)			30 400,00

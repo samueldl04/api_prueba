@@ -1,0 +1,13 @@
+{
+    "PROJECT_NAME": "Aplicación de Fichajes",
+    "HOST": "0.0.0.0",
+    "PORT": 8000,
+    "MYSQL_USER": "api_prueba",
+    "MYSQL_PASSWORD": "api_prueba",
+    "MYSQL_HOST": "localhost",
+    "MYSQL_PORT": "3306",
+    "MYSQL_DATABASE": "api_prueba",
+    "SECRET_KEY": "eDC9gR2ObP9oGmnnPTzOxCj6-XjattqFgotIjdXanl4=",
+    "ALGORITHM": "HS256",
+    "ACCESS_TOKEN_EXPIRE_MINUTES": 30
+}

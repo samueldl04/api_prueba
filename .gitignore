@@ -17,9 +17,7 @@ __pycache__/
 **/*.so
 **/*.cpython-*.pyc
 
-# Archivos específicos
-estructura.md
-config.json
+
 
 # Logs
 *.log
